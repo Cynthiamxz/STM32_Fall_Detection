@@ -90,13 +90,14 @@ int main(void)
     SystemClock_Config();
 
     /* USER CODE BEGIN SysInit */
-
+    MPU6050_init();
     /* USER CODE END SysInit */
 
     /* Initialize all configured peripherals */
     MX_GPIO_Init();
     MX_I2C1_Init();
     MX_I2C3_Init();
+
     /* USER CODE BEGIN 2 */
     char buf[4];
     _Bool activation_state = 0;
@@ -105,7 +106,7 @@ int main(void)
     float G[3]; // gyroscope
 
     float accel;
-    float omega;
+    float gyro;
     float angle;
 
     /* USER CODE END 2 */
@@ -115,48 +116,29 @@ int main(void)
 
     long lastPrintTime = 0;
 
-    HD44780_Init(2);
-    MPU6050_init();
-
     float maxAccel = 0;
     float maxGyro = 0;
 
     while (1) {
         //processing data from sensor
-
         MPU6050_Read_Accel(A, A + 1, A + 2);
         MPU6050_Read_Gyro(G, G + 1, G + 2);
 
 
-        long now = HAL_GetTick();
-        if (now - lastPrintTime > 1000 / 10) {
-            char str[16];
-            sprintf(str, "Max: %.9f", maxGyro);
-            HD44780_Clear();
-            HD44780_PrintStr(str);
-
-            lastPrintTime = now;
-        }
-
-
+        //update current data
         accel = sqrt(A[0] * A[0] + A[1] * A[1] + A[2] * A[2]);
-        omega = sqrt(G[0] * G[0] + G[1] * G[1] + G[2] * G[2]);
-
-        maxAccel = accel > maxAccel ? accel : maxAccel;
-        maxGyro = omega > maxGyro ? omega : maxGyro;
-
         angle = atan(sqrt(A[1] * A[1] + A[2] * A[2]) / A[0]) * (180 / M_PI);
+        gyro = sqrt(G[0] * G[0] + G[1] * G[1] + G[2] * G[2]);
 
-        //Conditions to Trigger Alert
-        if (accel > 300 && (angle > 30 || angle < -30)) {
+
+        //Triggering Alert
+//        if (accel > 300 && (angle > 30 || angle < -30)) {
+//            activation_state = 1;
+//        }
+        if (gyro > 150) {
             activation_state = 1;
         }
 
-//    if (angle < 80) {
-//        activation_state = 1;
-//    } else {
-//        activation_state = 0;
-//    }
 
         //turn on/off the alert
         if (activation_state) {

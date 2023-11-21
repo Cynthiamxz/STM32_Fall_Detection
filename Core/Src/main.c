@@ -100,7 +100,7 @@ int main(void)
 
     /* USER CODE BEGIN 2 */
     char buf[4];
-    _Bool activation_state = 0;
+    _Bool activation_state = 1;
 
     float A[3]; // To store the accelerometer data (x, y, z)
     float G[3]; // gyroscope
@@ -132,10 +132,7 @@ int main(void)
 
 
         //Triggering Alert
-//        if (accel > 300 && (angle > 30 || angle < -30)) {
-//            activation_state = 1;
-//        }
-        if (gyro > 150) {
+        if (accel > 300 && (angle > 30 || angle < -30)) {
             activation_state = 1;
         }
 

@@ -61,8 +61,8 @@ void Error_Handler(void);
 #define LD2_GPIO_Port GPIOA
 #define button_Pin GPIO_PIN_10
 #define button_GPIO_Port GPIOB
-#define buzzer_Pin GPIO_PIN_8
-#define buzzer_GPIO_Port GPIOA
+#define buzzer_Pin GPIO_PIN_5
+#define buzzer_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 

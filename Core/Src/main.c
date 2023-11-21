@@ -28,6 +28,7 @@
 #include <string.h>
 #include <math.h>
 #include "MPU6050.h"
+#include "liquidcrystal_i2c.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -70,7 +71,8 @@ void SystemClock_Config(void);
   * @brief  The application entry point.
   * @retval int
   */
-int main(void) {
+int main(void)
+{
     /* USER CODE BEGIN 1 */
 
     /* USER CODE END 1 */
@@ -97,7 +99,7 @@ int main(void) {
     MX_I2C3_Init();
     /* USER CODE BEGIN 2 */
     char buf[4];
-    _Bool activation_state = 1;
+    _Bool activation_state = 0;
 
     float A[3]; // To store the accelerometer data (x, y, z)
     float G[3]; // gyroscope
@@ -114,19 +116,22 @@ int main(void) {
     long lastPrintTime = 0;
 
     HD44780_Init(2);
+    MPU6050_init();
 
+    float maxAccel = 0;
+    float maxGyro = 0;
 
     while (1) {
         //processing data from sensor
-        MPU6050_init();
 
         MPU6050_Read_Accel(A, A + 1, A + 2);
         MPU6050_Read_Gyro(G, G + 1, G + 2);
 
+
         long now = HAL_GetTick();
         if (now - lastPrintTime > 1000 / 10) {
             char str[16];
-            sprintf(str, "%.9f", G[0]);
+            sprintf(str, "Max: %.9f", maxGyro);
             HD44780_Clear();
             HD44780_PrintStr(str);
 
@@ -137,10 +142,13 @@ int main(void) {
         accel = sqrt(A[0] * A[0] + A[1] * A[1] + A[2] * A[2]);
         omega = sqrt(G[0] * G[0] + G[1] * G[1] + G[2] * G[2]);
 
+        maxAccel = accel > maxAccel ? accel : maxAccel;
+        maxGyro = omega > maxGyro ? omega : maxGyro;
+
         angle = atan(sqrt(A[1] * A[1] + A[2] * A[2]) / A[0]) * (180 / M_PI);
 
         //Conditions to Trigger Alert
-        if (accel > 200) {
+        if (accel > 300 && (angle > 30 || angle < -30)) {
             activation_state = 1;
         }
 
@@ -175,7 +183,8 @@ int main(void) {
   * @brief System Clock Configuration
   * @retval None
   */
-void SystemClock_Config(void) {
+void SystemClock_Config(void)
+{
     RCC_OscInitTypeDef RCC_OscInitStruct = {0};
     RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
@@ -196,20 +205,22 @@ void SystemClock_Config(void) {
     RCC_OscInitStruct.PLL.PLLN = 72;
     RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
     RCC_OscInitStruct.PLL.PLLQ = 4;
-    if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
+    if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+    {
         Error_Handler();
     }
 
     /** Initializes the CPU, AHB and APB buses clocks
     */
-    RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK
-                                  | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
+    RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                                  |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
     RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
     RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
     RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
     RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-    if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK) {
+    if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+    {
         Error_Handler();
     }
 }
@@ -222,7 +233,8 @@ void SystemClock_Config(void) {
   * @brief  This function is executed in case of error occurrence.
   * @retval None
   */
-void Error_Handler(void) {
+void Error_Handler(void)
+{
     /* USER CODE BEGIN Error_Handler_Debug */
     /* User can add his own implementation to report the HAL error return state */
     __disable_irq();

@@ -100,7 +100,7 @@ int main(void)
 
     /* USER CODE BEGIN 2 */
     char buf[4];
-    _Bool activation_state = 1;
+    _Bool activation_state = 0;
 
     float A[3]; // To store the accelerometer data (x, y, z)
     float G[3]; // gyroscope
